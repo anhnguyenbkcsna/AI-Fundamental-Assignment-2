@@ -38,37 +38,36 @@ def play():
 		mouse_x = pos[0]
 		mouse_y = pos[1]
 		square = move(mouse_x, mouse_y, player)
-  
+
+  	# Debug mouse cursor
+		stepText = my_font.render('Mouse {}'.format(square), False, (0, 0, 0))
+		screen.blit(stepText, (0, 0))
+
+		# init board
+		board = PlayingBoard.current_board()
+		for col in range(8):
+			for row in range(8):
+				pygame.draw.rect(screen, (83, 127, 231), pygame.Rect(row*unit + start_x, col*unit + start_y, unit, unit), 1)   # border
+				if board[row][col] == -1: # X
+					pygame.draw.rect(screen, (0, 0, 0), pygame.Rect(row*unit + start_x, col*unit + start_y, unit, unit))
+				elif board[row][col] == 1: # O
+					pygame.draw.rect(screen, (255, 255, 255), pygame.Rect(row*unit + start_x, col*unit + start_y, unit, unit))
+		
 		for event in pygame.event.get(): # quit game
 			if event.type == pygame.QUIT:
 				running = False
 			# check Mouse
 			if event.type == pygame.MOUSEBUTTONDOWN:
 				clicked = True
-				stepText = my_font.render('Clicking...', False, (0, 0, 0))
-				screen.blit(stepText, (800, 0))
+
 			if event.type == pygame.MOUSEBUTTONUP and clicked == True:
+				possible_move = PlayingBoard.check_possible_moves(player)
 				clicked_square += square
-				board[square[0]][square[1]] = player
+				if square in possible_move:
+					board = PlayingBoard.apply_move(square, player)
+					player = -player # X -> O || O -> X
 				clicked = False
-				player = -player # X -> O || O -> X
 
-  	# Debug mouse cursor
-		stepText = my_font.render('Mouse {}'.format(square), False, (0, 0, 0))
-		screen.blit(stepText, (0, 0))
-  	
-		stepText = my_font.render('Move {}'.format(clicked_square), False, (0, 0, 0))
-		screen.blit(stepText, (0, 50))
-
-		# init board
-		board = PlayingBoard.current_board()
-		for row in range(8):
-			for col in range(8):
-				pygame.draw.rect(screen, (83, 127, 231), pygame.Rect(row*unit + start_x, col*unit + start_y, unit, unit), 1)   # border
-				if board[row][col] == -1: # X
-					pygame.draw.rect(screen, (0, 0, 0), pygame.Rect(row*unit + start_x, col*unit + start_y, unit, unit))
-				elif board[row][col] == 1: # O
-					pygame.draw.rect(screen, (255, 255, 255), pygame.Rect(row*unit + start_x, col*unit + start_y, unit, unit))
 		pygame.display.update()
 
 # Run game
