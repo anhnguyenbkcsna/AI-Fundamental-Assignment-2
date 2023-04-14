@@ -1,3 +1,8 @@
+import time
+import random
+from config import *
+from copy import deepcopy
+
 from config import *
 from copy import deepcopy
 
@@ -19,17 +24,6 @@ class Board:
     return self.board
   def current_board(self):
     return self.board
-  
-  def count(self):
-    count_X = 0
-    count_O = 0
-    for i in self.board:
-      for j in self.board:
-        if board[i][j] == -1:
-          count_X += 1
-        elif board[i][j] == 1:
-          count_O += 1
-    return count_X, count_O
   
   def check_direction(self, row, col, row_add, col_add, other):
     i = row + row_add
@@ -99,5 +93,22 @@ class Board:
       self.board[move[0]][move[1]] = player
       for (x, y) in self.direction:
         self.flip(move, x, y, player)
-    # for i in self.board:
-    #   print(i)
+
+def select_move(cur_state, player_to_move, remain_time):
+	NewBoard = Board()
+	NewBoard.update_board(cur_state)
+	start_time = time.time()
+	
+	possible_move = NewBoard.check_possible_moves(player_to_move)
+	if possible_move:
+		selected_move = random.choice(possible_move)
+
+		end_time = time.time()
+		computer_time = round(end_time - start_time, 2)
+		remain_time -= computer_time
+		if computer_time > 3:
+			print('Computer: Time out!!!')
+		return selected_move, remain_time
+	else: 
+		print('Computer: Out of moves!')
+	return None
