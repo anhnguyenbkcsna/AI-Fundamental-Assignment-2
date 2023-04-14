@@ -12,6 +12,14 @@ class Board:
                   [0, 0, 0, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 0]]
+    self.heuristic = [[100, -20, 10, 10, 10, 10, -20, 100],
+                  [-20, -40, 5, 5, 5, 5, -40, -20],
+                  [10, -10, 5, 5, 5, 5, -10, 10],
+                  [10, -10, 5, 5, 5, 5, -10, 10],
+                  [10, -10, 5, 5, 5, 5, -10, 10],
+                  [10, -10, 5, 5, 5, 5, -10, 10],
+                  [-20, -40, 5, 5, 5, 5, -40, -20],
+                  [100, -20, 10, 10, 10, 10, -20, 100]]
     self.possible_move = []
     self.direction = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
   def update_board(self, cur_state):
@@ -23,14 +31,23 @@ class Board:
   def count(self):
     count_X = 0
     count_O = 0
-    for i in self.board:
-      for j in self.board:
-        if board[i][j] == -1:
+    for i in range(8):
+      for j in range(8):
+        if self.board[i][j] == -1:
           count_X += 1
-        elif board[i][j] == 1:
+        elif self.board[i][j] == 1:
           count_O += 1
     return count_X, count_O
-  
+  def weighted_score(self, player_to_move):
+    other = - player_to_move
+    total = 0
+    for i in range(8):
+      for j in range(8):
+        if self.board[i][j] == player_to_move:
+          total += self.heuristic[i][j]
+        elif self.board[i][j] == other:
+          total -= self.heuristic[i][j]
+
   def check_direction(self, row, col, row_add, col_add, other):
     i = row + row_add
     j = col + col_add
