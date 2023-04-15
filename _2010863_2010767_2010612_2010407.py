@@ -1,9 +1,6 @@
+import sys
 import time
 import random
-from config import *
-from copy import deepcopy
-
-from config import *
 from copy import deepcopy
 
 class Board:
@@ -17,18 +14,18 @@ class Board:
                   [0, 0, 0, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 0]]
-    self.heuristic = [[100, -20, 10, 10, 10, 10, -20, 100],
-                      [-20, -40, 5, 5, 5, 5, -40, -20],
-                      [10, -10, 5, 5, 5, 5, -10, 10],
-                      [10, -10, 5, 5, 5, 5, -10, 10],
-                      [10, -10, 5, 5, 5, 5, -10, 10],
-                      [10, -10, 5, 5, 5, 5, -10, 10],
-                      [-20, -40, 5, 5, 5, 5, -40, -20],
-                      [100, -20, 10, 10, 10, 10, -20, 100]]
+    self.heuristic = [[1000, -10, 5, 5, 5, 5, -10, 1000],
+                  [-10, -20, -1, -1, -1, -1, -20, -10],
+                  [5, -1, 1, 1, 1, 1, -1, 5],
+                  [5, -1, 1, 1, 1, 1, -1, 5],
+                  [5, -1, 1, 1, 1, 1, -1, 5],
+                  [5, -1, 1, 1, 1, 1, -1, 5],
+                  [-10, -20, -1, -1, -1, -1, -20, -10],
+                  [1000, -20, 10, 10, 10, 10, -20, 1000]]
     self.possible_move = []
     self.direction = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
   def update_board(self, cur_state):
-    self.board = cur_state
+    self.board = deepcopy(cur_state)
     return self.board
   def current_board(self):
     return self.board
@@ -36,14 +33,13 @@ class Board:
   def count(self):
     count_X = 0
     count_O = 0
-    for i in self.board:
-      for j in self.board:
-        if board[i][j] == -1:
+    for i in range(8):
+      for j in range(8):
+        if self.board[i][j] == -1:
           count_X += 1
-        elif board[i][j] == 1:
+        elif self.board[i][j] == 1:
           count_O += 1
     return count_X, count_O
-  
   def weighted_score(self, player_to_move):
     other = - player_to_move
     total = 0
@@ -53,9 +49,8 @@ class Board:
           total += self.heuristic[i][j]
         elif self.board[i][j] == other:
           total -= self.heuristic[i][j]
-          
+    return total
 
-  
   def check_direction(self, row, col, row_add, col_add, other):
     i = row + row_add
     j = col + col_add
@@ -66,7 +61,7 @@ class Board:
       while (i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == other):
         i += row_add
         j += col_add
-      if (i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == EMPTY):
+      if (i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == 0):
         return (i, j)
   
   #lookup
@@ -120,70 +115,87 @@ class Board:
         self.board[square[0]][square[1]] = player
       
   def apply_move(self, move, player):
+    self.possible_move = self.check_possible_moves(player)
     if move in self.possible_move:
       self.board[move[0]][move[1]] = player
       for (x, y) in self.direction:
         self.flip(move, x, y, player)
-
+    
+    # for i in self.board:
+    #   print(i)
+    
   # ------ Minimax ------
-  def minimax_max_node(cur_state, player_to_move, depth, remain_time):
-    bes_max_score = -9999999
-    other = player_to_move
-    cur_board = Board()
-    cur_board.update_board(cur_state)
-    possible_move = cur_board.check_possible_moves(player_to_move)
+def minimax_max_node(cur_state, player_to_move, depth, remain_time):
+	best_max_score = -9999999
+	other = -player_to_move
+	cur_board = Board()
+	board = cur_board.update_board(cur_state)
+	possible_move = cur_board.check_possible_moves(player_to_move)
     
-    if possible_move == [] or depth==0:
-      score = self.weighted_score(other)
-    for move in possible_move:
-      new_board = Board()
-      new_board.update_board(cur_state)
-      new_board.apply_move(move, player)
-      move_score = minimax_min_node(new_board, other, depth-1, remain_time)
-      if move_score > best_max_score:
-        move_score = best_max_score
-    return best_max_score
+	if possible_move == [] or depth == 0:
+		score = cur_board.weighted_score(other)
+		# print(score)
+		return score
+	else:
+		for move in possible_move:
+			new_board = Board()
+			new_board.update_board(cur_state)
+			new_board.apply_move(move, player_to_move)
+			created_board = new_board.current_board()
+			move_score = minimax_min_node(created_board, other, depth-1, remain_time)
+			if move_score > best_max_score:
+				best_max_score = move_score
+	return best_max_score
     
-  def minimax_min_node(cur_state, player_to_move, depth, remain_time):
-    best_min_score = 9999999
-    other = -player_to_move
-    cur_board = Board()
-    cur_board.update_board(cur_state)
-    possible_move = cur_board.check_possible_moves(player_to_move)
+def minimax_min_node(cur_state, player_to_move, depth, remain_time):
+	best_min_score = 9999999
+	other = -player_to_move
+	cur_board = Board()
+	board = cur_board.update_board(cur_state)
+	possible_move = cur_board.check_possible_moves(player_to_move)
     
-    if possible_move == [] or depth==0:
-      score = self.weighted_score(other)
-    for move in possible_move:
-      new_board = Board()
-      new_board.update_board(cur_state)
-      new_board = self.apply_move(move, player)
-      move_score = minimax_max_node(new_board, other, depth-1, remain_time)
-      if move_score < best_min_score:
-        move_score = best_min_score
-    return best_min_score
-  
-  def minimax(cur_state, player_to_move, depth, remain_time):
-    best_max_score = -9999999
-    other = -player_to_move
-    cur_board = Board()
-    possible_move = cur_board.check_possible_moves(player_to_move)
-    
-    for move in possible_move:
-      new_board = Board()
-      new_board.update_board(cur_state)
-      new_board.apply_move(move, player)
-      move_score = minimax_min_node(new_board, other, depth-1, remain_time)
-      if move_score > best_max_score:
-        best_max_score = move_score
-        best_move = move
-    return best_move
+	if possible_move == [] or depth == 0:
+		score = cur_board.weighted_score(other)
+		# print(score)
+		return score
+	else:
+		for move in possible_move:
+			new_board = Board()
+			new_board.update_board(cur_state)
+			new_board.apply_move(move, player_to_move)
+			created_board = new_board.current_board()
+			move_score = minimax_max_node(created_board, other, depth-1, remain_time)
+			if move_score < best_min_score:
+				best_min_score = move_score
+	return best_min_score
+def minimax(cur_state, player_to_move, depth, remain_time):
+	best_max_score = -9999999
+	best_move = None
+	other = -player_to_move
+	cur_board = Board()
+	board = cur_board.update_board(cur_state)
+	possible_move = cur_board.check_possible_moves(player_to_move)
+
+	for move in possible_move:
+		new_board = Board()
+		new_board.update_board(cur_state)
+		new_board.apply_move(move, player_to_move)
+		created_board = new_board.current_board()
+
+		move_score = minimax_min_node(created_board, other, depth-1, remain_time)
+		if move_score > best_max_score:
+			best_max_score = move_score
+			best_move = move
+
+	print('Best move: ', best_move)
+	return best_move
   # ------ Minimax ------
 
 def select_move(cur_state, player_to_move, remain_time):
 	NewBoard = Board()
 	NewBoard.update_board(cur_state)
 	start_time = time.time()
-	depth = 5
+	depth = 3
 	
 	possible_move = NewBoard.check_possible_moves(player_to_move)
 	if possible_move:
@@ -194,8 +206,20 @@ def select_move(cur_state, player_to_move, remain_time):
 		computer_time = round(end_time - start_time, 2)
 		remain_time -= computer_time
 		if computer_time > 3:
-			print('Computer: Time out!!!')
-		return selected_move, remain_time
+			print('Computer: Time out!!!', computer_time)
+		# return random_move
+		return minimax_move
 	else: 
 		print('Computer: Out of moves!')
 	return None
+
+# board = [[0, 0, 0, 0, 0, 0, 0, 0],
+#         [0, 0, 0, 0, 0, 0, 0, 0],
+#         [0, 0, 0, -1, 0, 0, 0, 0],
+#         [0, 0, 0, -1, -1, 0, 0, 0],
+#         [0, 0, 0, -1, 1, 0, 0, 0],
+#         [0, 0, 0, 0, 0, 0, 0, 0],
+#         [0, 0, 0, 0, 0, 0, 0, 0],
+#         [0, 0, 0, 0, 0, 0, 0, 0]]
+
+# select_move(board, -1, 30)

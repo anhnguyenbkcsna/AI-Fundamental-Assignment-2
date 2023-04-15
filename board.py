@@ -1,4 +1,3 @@
-from config import *
 from copy import deepcopy
 
 class Board:
@@ -59,7 +58,7 @@ class Board:
       while (i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == other):
         i += row_add
         j += col_add
-      if (i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == EMPTY):
+      if (i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == 0):
         return (i, j)
   
   #lookup
