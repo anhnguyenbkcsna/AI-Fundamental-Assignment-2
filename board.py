@@ -12,18 +12,18 @@ class Board:
                   [0, 0, 0, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 0]]
-    self.heuristic = [[100, -20, 10, 10, 10, 10, -20, 100],
-                  [-20, -40, 5, 5, 5, 5, -40, -20],
-                  [10, -10, 5, 5, 5, 5, -10, 10],
-                  [10, -10, 5, 5, 5, 5, -10, 10],
-                  [10, -10, 5, 5, 5, 5, -10, 10],
-                  [10, -10, 5, 5, 5, 5, -10, 10],
-                  [-20, -40, 5, 5, 5, 5, -40, -20],
-                  [100, -20, 10, 10, 10, 10, -20, 100]]
+    self.heuristic = [[1000, -10, 5, 5, 5, 5, -10, 1000],
+                  [-10, -20, -1, -1, -1, -1, -20, -10],
+                  [5, -1, 1, 1, 1, 1, -1, 5],
+                  [5, -1, 1, 1, 1, 1, -1, 5],
+                  [5, -1, 1, 1, 1, 1, -1, 5],
+                  [5, -1, 1, 1, 1, 1, -1, 5],
+                  [-10, -20, -1, -1, -1, -1, -20, -10],
+                  [1000, -20, 10, 10, 10, 10, -20, 1000]]
     self.possible_move = []
     self.direction = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
   def update_board(self, cur_state):
-    self.board = cur_state
+    self.board = deepcopy(cur_state)
     return self.board
   def current_board(self):
     return self.board
@@ -47,6 +47,7 @@ class Board:
           total += self.heuristic[i][j]
         elif self.board[i][j] == other:
           total -= self.heuristic[i][j]
+    return total
 
   def check_direction(self, row, col, row_add, col_add, other):
     i = row + row_add
@@ -112,9 +113,11 @@ class Board:
         self.board[square[0]][square[1]] = player
       
   def apply_move(self, move, player):
+    self.possible_move = self.check_possible_moves(player)
     if move in self.possible_move:
       self.board[move[0]][move[1]] = player
       for (x, y) in self.direction:
         self.flip(move, x, y, player)
+    
     # for i in self.board:
     #   print(i)

@@ -35,6 +35,8 @@ def minimax_max_node(cur_state, player_to_move, depth, remain_time):
     
 	if possible_move == [] or depth == 0:
 		score = cur_board.weighted_score(other)
+		# print(score)
+		return score
 	else:
 		for move in possible_move:
 			new_board = Board()
@@ -43,7 +45,7 @@ def minimax_max_node(cur_state, player_to_move, depth, remain_time):
 			created_board = new_board.current_board()
 			move_score = minimax_min_node(created_board, other, depth-1, remain_time)
 			if move_score > best_max_score:
-				move_score = best_max_score
+				best_max_score = move_score
 	return best_max_score
     
 def minimax_min_node(cur_state, player_to_move, depth, remain_time):
@@ -55,6 +57,8 @@ def minimax_min_node(cur_state, player_to_move, depth, remain_time):
     
 	if possible_move == [] or depth == 0:
 		score = cur_board.weighted_score(other)
+		# print(score)
+		return score
 	else:
 		for move in possible_move:
 			new_board = Board()
@@ -63,11 +67,11 @@ def minimax_min_node(cur_state, player_to_move, depth, remain_time):
 			created_board = new_board.current_board()
 			move_score = minimax_max_node(created_board, other, depth-1, remain_time)
 			if move_score < best_min_score:
-				move_score = best_min_score
+				best_min_score = move_score
 	return best_min_score
-  
 def minimax(cur_state, player_to_move, depth, remain_time):
 	best_max_score = -9999999
+	best_move = None
 	other = -player_to_move
 	cur_board = Board()
 	board = cur_board.update_board(cur_state)
@@ -75,11 +79,15 @@ def minimax(cur_state, player_to_move, depth, remain_time):
 
 	for move in possible_move:
 		new_board = Board()
+		new_board.update_board(cur_state)
 		new_board.apply_move(move, player_to_move)
-		move_score = minimax_min_node(board, other, depth-1, remain_time)
+		created_board = new_board.current_board()
+
+		move_score = minimax_min_node(created_board, other, depth-1, remain_time)
 		if move_score > best_max_score:
 			best_max_score = move_score
 			best_move = move
+
 	print('Best move: ', best_move)
 	return best_move
   # ------ Minimax ------
@@ -88,7 +96,7 @@ def select_move(cur_state, player_to_move, remain_time):
 	NewBoard = Board()
 	NewBoard.update_board(cur_state)
 	start_time = time.time()
-	depth = 4
+	depth = 3
 	
 	possible_move = NewBoard.check_possible_moves(player_to_move)
 	if possible_move:
@@ -100,7 +108,7 @@ def select_move(cur_state, player_to_move, remain_time):
 		remain_time -= computer_time
 		if computer_time > 3:
 			print('Computer: Time out!!!', computer_time)
-		# return random_move, remain_time
+		# return random_move
 		return minimax_move
 	else: 
 		print('Computer: Out of moves!')
@@ -128,9 +136,9 @@ def play():
 		mouse_x = pos[0]
 		mouse_y = pos[1]
 		square = move(mouse_x, mouse_y, player_to_move)
-
-
-
+  
+		stepText = my_font.render('Mouse {}'.format(square), False, (0, 0, 0))
+		screen.blit(stepText, (750, 0))
 		# init board
 		board = PlayingBoard.current_board()
 		for col in range(8):
@@ -146,8 +154,8 @@ def play():
 			possible_move = PlayingBoard.check_possible_moves(player_to_move)
 			selected_move = select_move(board, player_to_move, O_time) # receive tuple of move from Computer
 			if selected_move in possible_move:
-				board = PlayingBoard.apply_move(selected_move, player_to_move)
-
+				PlayingBoard.apply_move(selected_move, player_to_move)
+    
 			player_to_move = - player_to_move # X -> O || O -> X
 			is_player_move = True
 			player_start_time = time.time()
@@ -171,7 +179,7 @@ def play():
 				# Highlight for possible_move into yellow
 				clicked_square += square
 				if square in possible_move:
-					board = PlayingBoard.apply_move(square, player_to_move)
+					PlayingBoard.apply_move(square, player_to_move)
 					player_to_move = - player_to_move # X -> O || O -> X
 					is_player_move = False
 				clicked = False
