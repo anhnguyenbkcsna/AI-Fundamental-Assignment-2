@@ -45,11 +45,20 @@ class Board:
         return count_X, count_O
 
     def weighted_score(self, player_to_move):
-        my_tiles, opp_tiles, my_front_tiles, opp_front_tiles, x, y = 0, 0, 0, 0, 0, 0
+        # Paper link: https://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf
+        my_tiles, opp_tiles, my_front_tiles, opp_front_tiles = 0, 0, 0, 0
         p, c, l, m, f, d = 0, 0, 0, 0, 0, 0
-
-        X1 = [-1, -1, 0, 1, 1, 1, 0, -1]
-        Y1 = [0, 1, 1, 1, 0, -1, -1, -1]
+        # Piece difference, frontier disks and disk squares
+        XY = [
+            (-1, 0),
+            (-1, 1),
+            (0, 1),
+            (1, 1),
+            (1, 0),
+            (1, -1),
+            (0, -1),
+            (-1, -1),
+        ]
         V = [
             [20, -3, 11, 8, 8, 11, -3, 20],
             [-3, -7, -4, 1, 1, -4, -7, -3],
@@ -69,9 +78,9 @@ class Board:
                     opp_tiles += 1
                     d -= V[i][j]
             if self.board[i][j] != 0:
-                for k in range(8):
-                    x = i + X1[k]
-                    y = j + Y1[k]
+                for k in XY:
+                    x = i + k[0]
+                    y = j + k[1]
                     if x >= 0 and x < 8 and y >= 0 and y < 8 and self.board[x][y] == 0:
                         if self.board[i][j] == player_to_move:
                             my_front_tiles += 1
@@ -84,97 +93,47 @@ class Board:
             p = -(100 * opp_tiles) / (my_tiles + opp_tiles)
         else:
             p = 0
-
         if my_front_tiles > opp_front_tiles:
             f = -(100 * my_front_tiles) / (my_front_tiles + opp_front_tiles)
         elif my_front_tiles < opp_front_tiles:
             f = (100 * opp_front_tiles) / (my_front_tiles + opp_front_tiles)
         else:
             f = 0
+        # Corner occupancy
         my_tiles, opp_tiles = 0, 0
-        if self.board[0][0] == player_to_move:
-            my_tiles += 1
-        elif self.board[0][0] == -player_to_move:
-            opp_tiles += 1
-        if self.board[0][7] == player_to_move:
-            my_tiles += 1
-        elif self.board[0][7] == -player_to_move:
-            opp_tiles += 1
-        if self.board[7][0] == player_to_move:
-            my_tiles += 1
-        elif self.board[7][0] == -player_to_move:
-            opp_tiles += 1
-        if self.board[7][7] == player_to_move:
-            my_tiles += 1
-        elif self.board[7][7] == -player_to_move:
-            opp_tiles += 1
+        corners = [(0, 0), (0, 7), (7, 0), (7, 7)]
+        for corner in corners:
+            if self.board[corner[0]][corner[1]] == player_to_move:
+                my_tiles += 1
+            elif self.board[corner[0]][corner[1]] == -player_to_move:
+                opp_tiles += 1
         c = 25 * (my_tiles - opp_tiles)
         my_tiles = opp_tiles = 0
-
-        if self.board[0][0] == 0:
-            if self.board[0][1] == player_to_move:
-                my_tiles += 1
-            elif self.board[0][1] == -player_to_move:
-                opp_tiles += 1
-            if self.board[1][1] == player_to_move:
-                my_tiles += 1
-            elif self.board[1][1] == -player_to_move:
-                opp_tiles += 1
-            if self.board[1][0] == player_to_move:
-                my_tiles += 1
-            elif self.board[1][0] == -player_to_move:
-                opp_tiles += 1
-        if self.board[0][7] == 0:
-            if self.board[0][6] == player_to_move:
-                my_tiles += 1
-            elif self.board[0][6] == -player_to_move:
-                opp_tiles += 1
-            if self.board[1][6] == player_to_move:
-                my_tiles += 1
-            elif self.board[1][6] == -player_to_move:
-                opp_tiles += 1
-            if self.board[1][7] == player_to_move:
-                my_tiles += 1
-            elif self.board[1][7] == -player_to_move:
-                opp_tiles += 1
-        if self.board[7][0] == 0:
-            if self.board[7][1] == player_to_move:
-                my_tiles += 1
-            elif self.board[7][1] == -player_to_move:
-                opp_tiles += 1
-            if self.board[6][1] == player_to_move:
-                my_tiles += 1
-            elif self.board[6][1] == -player_to_move:
-                opp_tiles += 1
-            if self.board[6][0] == player_to_move:
-                my_tiles += 1
-            elif self.board[6][0] == -player_to_move:
-                opp_tiles += 1
-        if self.board[7][7] == 0:
-            if self.board[6][7] == player_to_move:
-                my_tiles += 1
-            elif self.board[6][7] == -player_to_move:
-                opp_tiles += 1
-            if self.board[6][6] == player_to_move:
-                my_tiles += 1
-            elif self.board[6][6] == -player_to_move:
-                opp_tiles += 1
-            if self.board[7][6] == player_to_move:
-                my_tiles += 1
-            elif self.board[7][6] == -player_to_move:
-                opp_tiles += 1
+        # Corner closeness
+        corner_neighbors = [
+            [(0, 1), (1, 1), (1, 0)],
+            [(0, 6), (1, 6), (1, 7)],
+            [(6, 0), (6, 1), (7, 1)],
+            [(6, 6), (6, 7), (7, 6)],
+        ]
+        for index, corner in enumerate(corners):
+            if self.board[corner[0]][corner[1]] == 0:
+                for neighbor in corner_neighbors[index]:
+                    if self.board[neighbor[0]][neighbor[1]] == player_to_move:
+                        my_tiles += 1
+                    elif self.board[neighbor[0]][neighbor[1]] == -player_to_move:
+                        opp_tiles += 1
         l = -12.5 * (my_tiles - opp_tiles)
         # Mobility
         my_tiles = len(self.check_possible_moves(player_to_move))
         opp_tiles = len(self.check_possible_moves(-player_to_move))
-
         if my_tiles > opp_tiles:
             m = (100 * my_tiles) / (my_tiles + opp_tiles)
         elif my_tiles < opp_tiles:
             m = -(100 * opp_tiles) / (my_tiles + opp_tiles)
         else:
             m = 0
-        # final weighted score
+        # Final weighted score
         score = (
             (10 * p)
             + (801.724 * c)
