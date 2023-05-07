@@ -4,5 +4,5 @@ O = -1
 INFINITY = 99999999
 MAX = 0
 MIN = 1
-HUMAN = 'human'
-COMPUTER = 'computer'
+HUMAN = "human"
+COMPUTER = "computer"
