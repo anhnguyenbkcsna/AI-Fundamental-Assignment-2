@@ -79,64 +79,99 @@ class Board:
                             opp_front_tiles += 1
                         break
         if my_tiles > opp_tiles:
-            p = (100.0 * my_tiles) / (my_tiles + opp_tiles)
+            p = (100 * my_tiles) / (my_tiles + opp_tiles)
         elif my_tiles < opp_tiles:
-            p = -(100.0 * opp_tiles) / (my_tiles + opp_tiles)
+            p = -(100 * opp_tiles) / (my_tiles + opp_tiles)
         else:
             p = 0
 
         if my_front_tiles > opp_front_tiles:
-            f = -(100.0 * my_front_tiles) / (my_front_tiles + opp_front_tiles)
+            f = -(100 * my_front_tiles) / (my_front_tiles + opp_front_tiles)
         elif my_front_tiles < opp_front_tiles:
-            f = (100.0 * opp_front_tiles) / (my_front_tiles + opp_front_tiles)
+            f = (100 * opp_front_tiles) / (my_front_tiles + opp_front_tiles)
         else:
             f = 0
         my_tiles, opp_tiles = 0, 0
-
-        def corner_captured(x, y):
-            if self.board[x][y] == player_to_move:
-                my_tiles += 1
-            elif self.board[x][y] == -player_to_move:
-                opp_tiles += 1
-
-        corner_captured(0, 0)
-        corner_captured(0, 7)
-        corner_captured(7, 0)
-        corner_captured(7, 7)
+        if self.board[0][0] == player_to_move:
+            my_tiles += 1
+        elif self.board[0][0] == -player_to_move:
+            opp_tiles += 1
+        if self.board[0][7] == player_to_move:
+            my_tiles += 1
+        elif self.board[0][7] == -player_to_move:
+            opp_tiles += 1
+        if self.board[7][0] == player_to_move:
+            my_tiles += 1
+        elif self.board[7][0] == -player_to_move:
+            opp_tiles += 1
+        if self.board[7][7] == player_to_move:
+            my_tiles += 1
+        elif self.board[7][7] == -player_to_move:
+            opp_tiles += 1
         c = 25 * (my_tiles - opp_tiles)
         my_tiles = opp_tiles = 0
 
-        def corner_closeness(x, y):
-            if self.board[x][y] == player_to_move:
-                my_tiles += 1
-            elif self.board[x][y] == -player_to_move:
-                opp_tiles += 1
-
         if self.board[0][0] == 0:
-            corner_closeness(0, 1)
-            corner_closeness(1, 0)
-            corner_closeness(1, 1)
+            if self.board[0][1] == player_to_move:
+                my_tiles += 1
+            elif self.board[0][1] == -player_to_move:
+                opp_tiles += 1
+            if self.board[1][1] == player_to_move:
+                my_tiles += 1
+            elif self.board[1][1] == -player_to_move:
+                opp_tiles += 1
+            if self.board[1][0] == player_to_move:
+                my_tiles += 1
+            elif self.board[1][0] == -player_to_move:
+                opp_tiles += 1
         if self.board[0][7] == 0:
-            corner_closeness(0, 6)
-            corner_closeness(1, 6)
-            corner_closeness(1, 7)
+            if self.board[0][6] == player_to_move:
+                my_tiles += 1
+            elif self.board[0][6] == -player_to_move:
+                opp_tiles += 1
+            if self.board[1][6] == player_to_move:
+                my_tiles += 1
+            elif self.board[1][6] == -player_to_move:
+                opp_tiles += 1
+            if self.board[1][7] == player_to_move:
+                my_tiles += 1
+            elif self.board[1][7] == -player_to_move:
+                opp_tiles += 1
         if self.board[7][0] == 0:
-            corner_closeness(6, 0)
-            corner_closeness(6, 1)
-            corner_closeness(7, 1)
+            if self.board[7][1] == player_to_move:
+                my_tiles += 1
+            elif self.board[7][1] == -player_to_move:
+                opp_tiles += 1
+            if self.board[6][1] == player_to_move:
+                my_tiles += 1
+            elif self.board[6][1] == -player_to_move:
+                opp_tiles += 1
+            if self.board[6][0] == player_to_move:
+                my_tiles += 1
+            elif self.board[6][0] == -player_to_move:
+                opp_tiles += 1
         if self.board[7][7] == 0:
-            corner_closeness(6, 6)
-            corner_closeness(6, 7)
-            corner_closeness(7, 6)
+            if self.board[6][7] == player_to_move:
+                my_tiles += 1
+            elif self.board[6][7] == -player_to_move:
+                opp_tiles += 1
+            if self.board[6][6] == player_to_move:
+                my_tiles += 1
+            elif self.board[6][6] == -player_to_move:
+                opp_tiles += 1
+            if self.board[7][6] == player_to_move:
+                my_tiles += 1
+            elif self.board[7][6] == -player_to_move:
+                opp_tiles += 1
         l = -12.5 * (my_tiles - opp_tiles)
         # Mobility
-        my_tiles = self.check_possible_moves(player_to_move)
-        opp_tiles = self.check_possible_moves(-player_to_move)
+        my_tiles = len(self.check_possible_moves(player_to_move))
+        opp_tiles = len(self.check_possible_moves(-player_to_move))
 
         if my_tiles > opp_tiles:
-            m = (100.0 * my_tiles) / (my_tiles + opp_tiles)
+            m = (100 * my_tiles) / (my_tiles + opp_tiles)
         elif my_tiles < opp_tiles:
-            m = -(100.0 * opp_tiles) / (my_tiles + opp_tiles)
+            m = -(100 * opp_tiles) / (my_tiles + opp_tiles)
         else:
             m = 0
         # final weighted score
