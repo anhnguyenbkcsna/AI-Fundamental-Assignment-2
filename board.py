@@ -4,25 +4,27 @@ from copy import deepcopy
 class Board:
     def __init__(self):
         # board[row][col] in UI
-        self.board = [[0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 1, -1, 0, 0, 0],
-                      [0, 0, 0, -1, 1, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0, 0]]
-        self.heuristic = [[120, -20, 20, 5, 5, 20, -20, 120],
-                          [-20, -40, -5, -5, -5, -5, -40, -20],
-                          [20, -5, 15, 3, 3, 15, -5, 20],
-                          [5, -5, 3, 3, 3, 3, -5, 5],
-                          [5, -5, 3, 3, 3, 3, -5, 5],
-                          [20, -5, 15, 3, 3, 15, -5, 20],
-                          [-20, -40, -5, -5, -5, -5, -40, -20],
-                          [120, -20, 20, 5, 5, 20, -20, 120]]
+        self.board = [
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, -1, 0, 0, 0],
+            [0, 0, 0, -1, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+        ]
         self.possible_move = []
-        self.direction = [(-1, -1), (-1, 0), (-1, 1), (0, -1),
-                          (0, 1), (1, -1), (1, 0), (1, 1)]
+        self.direction = [
+            (-1, -1),
+            (-1, 0),
+            (-1, 1),
+            (0, -1),
+            (0, 1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+        ]
 
     def update_board(self, cur_state):
         self.board = deepcopy(cur_state)
@@ -43,27 +45,122 @@ class Board:
         return count_X, count_O
 
     def weighted_score(self, player_to_move):
-        other = - player_to_move
-        total = 0
+        my_tiles, opp_tiles, my_front_tiles, opp_front_tiles, x, y = 0, 0, 0, 0, 0, 0
+        p, c, l, m, f, d = 0, 0, 0, 0, 0, 0
+
+        X1 = [-1, -1, 0, 1, 1, 1, 0, -1]
+        Y1 = [0, 1, 1, 1, 0, -1, -1, -1]
+        V = [
+            [20, -3, 11, 8, 8, 11, -3, 20],
+            [-3, -7, -4, 1, 1, -4, -7, -3],
+            [11, -4, 2, 2, 2, 2, -4, 11],
+            [8, 1, 2, -3, -3, 2, 1, 8],
+            [8, 1, 2, -3, -3, 2, 1, 8],
+            [11, -4, 2, 2, 2, 2, -4, 11],
+            [-3, -7, -4, 1, 1, -4, -7, -3],
+            [20, -3, 11, 8, 8, 11, -3, 20],
+        ]
         for i in range(8):
             for j in range(8):
                 if self.board[i][j] == player_to_move:
-                    total += self.heuristic[i][j]
-                elif self.board[i][j] == other:
-                    total -= self.heuristic[i][j]
-        return total
+                    d += V[i][j]
+                    my_tiles += 1
+                elif self.board[i][j] == -player_to_move:
+                    opp_tiles += 1
+                    d -= V[i][j]
+            if self.board[i][j] != 0:
+                for k in range(8):
+                    x = i + X1[k]
+                    y = j + Y1[k]
+                    if x >= 0 and x < 8 and y >= 0 and y < 8 and self.board[x][y] == 0:
+                        if self.board[i][j] == player_to_move:
+                            my_front_tiles += 1
+                        else:
+                            opp_front_tiles += 1
+                        break
+        if my_tiles > opp_tiles:
+            p = (100.0 * my_tiles) / (my_tiles + opp_tiles)
+        elif my_tiles < opp_tiles:
+            p = -(100.0 * opp_tiles) / (my_tiles + opp_tiles)
+        else:
+            p = 0
+
+        if my_front_tiles > opp_front_tiles:
+            f = -(100.0 * my_front_tiles) / (my_front_tiles + opp_front_tiles)
+        elif my_front_tiles < opp_front_tiles:
+            f = (100.0 * opp_front_tiles) / (my_front_tiles + opp_front_tiles)
+        else:
+            f = 0
+        my_tiles, opp_tiles = 0, 0
+
+        def corner_captured(x, y):
+            if self.board[x][y] == player_to_move:
+                my_tiles += 1
+            elif self.board[x][y] == -player_to_move:
+                opp_tiles += 1
+
+        corner_captured(0, 0)
+        corner_captured(0, 7)
+        corner_captured(7, 0)
+        corner_captured(7, 7)
+        c = 25 * (my_tiles - opp_tiles)
+        my_tiles = opp_tiles = 0
+
+        def corner_closeness(x, y):
+            if self.board[x][y] == player_to_move:
+                my_tiles += 1
+            elif self.board[x][y] == -player_to_move:
+                opp_tiles += 1
+
+        if self.board[0][0] == 0:
+            corner_closeness(0, 1)
+            corner_closeness(1, 0)
+            corner_closeness(1, 1)
+        if self.board[0][7] == 0:
+            corner_closeness(0, 6)
+            corner_closeness(1, 6)
+            corner_closeness(1, 7)
+        if self.board[7][0] == 0:
+            corner_closeness(6, 0)
+            corner_closeness(6, 1)
+            corner_closeness(7, 1)
+        if self.board[7][7] == 0:
+            corner_closeness(6, 6)
+            corner_closeness(6, 7)
+            corner_closeness(7, 6)
+        l = -12.5 * (my_tiles - opp_tiles)
+        # Mobility
+        my_tiles = self.check_possible_moves(player_to_move)
+        opp_tiles = self.check_possible_moves(-player_to_move)
+
+        if my_tiles > opp_tiles:
+            m = (100.0 * my_tiles) / (my_tiles + opp_tiles)
+        elif my_tiles < opp_tiles:
+            m = -(100.0 * opp_tiles) / (my_tiles + opp_tiles)
+        else:
+            m = 0
+        # final weighted score
+        score = (
+            (10 * p)
+            + (801.724 * c)
+            + (382.026 * l)
+            + (78.922 * m)
+            + (74.396 * f)
+            + (10 * d)
+        )
+        return score
 
     def check_direction(self, row, col, row_add, col_add, other):
         i = row + row_add
         j = col + col_add
         # check neighbor: other color -> valid move
-        if (i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == other):
+        if i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == other:
             i += row_add
             j += col_add
-            while (i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == other):
+            while i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == other:
                 i += row_add
                 j += col_add
-            if (i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == 0):
+            if i >= 0 and j >= 0 and i < 8 and j < 8 and self.board[i][j] == 0:
                 return (i, j)
 
     # lookup
@@ -75,9 +172,8 @@ class Board:
 
         is_possible_move = []
 
-        for (x, y) in self.direction:  # 8 direction
-            pos = self.check_direction(
-                row, col, x, y, other)  # return posible (x, y)
+        for x, y in self.direction:  # 8 direction
+            pos = self.check_direction(row, col, x, y, other)  # return posible (x, y)
             if pos:
                 is_possible_move.append(pos)
         return is_possible_move
@@ -93,8 +189,7 @@ class Board:
         for i in range(8):
             for j in range(8):
                 if self.board[i][j] == player:
-                    possible_move = possible_move + \
-                        self.is_possible_move(i, j, player)
+                    possible_move = possible_move + self.is_possible_move(i, j, player)
         possible_move = list(set(possible_move))
         self.possible_move = possible_move
         return possible_move
@@ -125,7 +220,7 @@ class Board:
         self.possible_move = self.check_possible_moves(player)
         if move in self.possible_move:
             self.board[move[0]][move[1]] = player
-            for (x, y) in self.direction:
+            for x, y in self.direction:
                 self.flip(move, x, y, player)
 
         # for i in self.board:
