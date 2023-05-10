@@ -1,9 +1,11 @@
 import pygame
 import sys
 import time
-import random
 from board import *
 from config import *
+
+POSITIVE_INFINITY = sys.maxsize
+NEGATIVE_INFINITY = -sys.maxsize - 1
 
 # intialize the pygame
 pygame.init()
@@ -26,97 +28,76 @@ def move(mouse_x, mouse_y, player):
     pos_x = int((mouse_x - start_x) / 80)
     pos_y = int((mouse_y - start_y) / 80)
     return (pos_x, pos_y)
-    # ------ Minimax ------
 
 
-def minimax_max_node(cur_state, player_to_move, depth, remain_time):
-    best_max_score = -9999999
-    other = -player_to_move
-    cur_board = Board()
-    board = cur_board.update_board(cur_state)
-    possible_move = cur_board.check_possible_moves(player_to_move)
-
-    if possible_move == [] or depth == 0:
-        score = cur_board.weighted_score(other)
-        # print(score)
-        return score
-    else:
+def alpha_beta(cur_state, depth, alpha, beta, maximizingPlayer, player_to_move):
+    NewBoard = Board()
+    NewBoard.update_board(cur_state)
+    possible_move = NewBoard.check_possible_moves(player_to_move)
+    if depth == 0 or len(possible_move) == 0:
+        return NewBoard.weighted_score(player_to_move), None
+    if maximizingPlayer:
+        value = NEGATIVE_INFINITY
+        return_action = None
         for move in possible_move:
             new_board = Board()
             new_board.update_board(cur_state)
             new_board.apply_move(move, player_to_move)
             created_board = new_board.current_board()
-            move_score = minimax_min_node(created_board, other, depth - 1, remain_time)
-            if move_score > best_max_score:
-                best_max_score = move_score
-    return best_max_score
-
-
-def minimax_min_node(cur_state, player_to_move, depth, remain_time):
-    best_min_score = 9999999
-    other = -player_to_move
-    cur_board = Board()
-    board = cur_board.update_board(cur_state)
-    possible_move = cur_board.check_possible_moves(player_to_move)
-
-    if possible_move == [] or depth == 0:
-        score = cur_board.weighted_score(other)
-        # print(score)
-        return score
+            value = max(
+                value,
+                alpha_beta(
+                    created_board, depth - 1, alpha, beta, False, -player_to_move
+                )[0],
+            )
+            if value >= beta:
+                return value, move
+            if value > alpha:
+                alpha = value
+                return_action = move
+        return value, return_action
     else:
+        value = POSITIVE_INFINITY
+        return_action = None
         for move in possible_move:
             new_board = Board()
             new_board.update_board(cur_state)
             new_board.apply_move(move, player_to_move)
             created_board = new_board.current_board()
-            move_score = minimax_max_node(created_board, other, depth - 1, remain_time)
-            if move_score < best_min_score:
-                best_min_score = move_score
-    return best_min_score
-
-
-def minimax(cur_state, player_to_move, depth, remain_time):
-    best_max_score = -9999999
-    best_move = None
-    other = -player_to_move
-    cur_board = Board()
-    board = cur_board.update_board(cur_state)
-    possible_move = cur_board.check_possible_moves(player_to_move)
-
-    for move in possible_move:
-        new_board = Board()
-        new_board.update_board(cur_state)
-        new_board.apply_move(move, player_to_move)
-        created_board = new_board.current_board()
-
-        move_score = minimax_min_node(created_board, other, depth - 1, remain_time)
-        if move_score > best_max_score:
-            best_max_score = move_score
-            best_move = move
-
-    print("Best move: ", best_move)
-    return best_move
-    # ------ Minimax ------
+            value = min(
+                value,
+                alpha_beta(
+                    created_board, depth - 1, alpha, beta, True, -player_to_move
+                )[0],
+            )
+            if value <= alpha:
+                return value, move
+            if value < beta:
+                beta = value
+                return_action = move
+        return value, return_action
 
 
 def select_move(cur_state, player_to_move, remain_time):
     NewBoard = Board()
     NewBoard.update_board(cur_state)
     start_time = time.time()
-    depth = 3
+    depth = 4
 
     possible_move = NewBoard.check_possible_moves(player_to_move)
     if possible_move:
-        random_move = random.choice(possible_move)
-        minimax_move = minimax(cur_state, player_to_move, depth, remain_time)
+        # action = random.choice(possible_move)
+        _, action = alpha_beta(
+            cur_state, depth, NEGATIVE_INFINITY, POSITIVE_INFINITY, True, player_to_move
+        )
 
         end_time = time.time()
         computer_time = round(end_time - start_time, 2)
         remain_time -= computer_time
         if computer_time > 3:
             print("Computer: Time out!!!", computer_time)
-        # return random_move
-        return minimax_move
+        # return action
+        return action
     else:
         print("Computer: Out of moves!")
     return None
